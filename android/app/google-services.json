@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "398802809651",
+    "project_id": "openvpnproject-bc4f2",
+    "storage_bucket": "openvpnproject-bc4f2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:398802809651:android:9fe3ffba6418c12b1c4446",
+        "android_client_info": {
+          "package_name": "com.topfreelancerdeveloper.flutter_openvpn_example"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "398802809651-q4844mr76bt2jp156nj8g435luq717rf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.topfreelancerdeveloper.flutter_openvpn_example",
+            "certificate_hash": "07e837df247e6699e196e3a2e52abd900081b6d8"
+          }
+        },
+        {
+          "client_id": "398802809651-m9fhv9s0ab9ebun7i9pjj1n22pl7557g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCCPSouec8P7qPpVPa5uz9fbIwC5pyn78Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "398802809651-m9fhv9s0ab9ebun7i9pjj1n22pl7557g.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
