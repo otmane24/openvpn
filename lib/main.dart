@@ -1,7 +1,6 @@
-// ignore: avoid_web_libraries_in_flutter
-//import 'dart:html';
+
+
 import 'dart:io';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
@@ -48,21 +47,28 @@ class _HomePageState extends State<HomePage> {
   final _passwordController = TextEditingController();
 
   String _downLoadUrl ;
-  firebase_storage.Reference _reference = firebase_storage.FirebaseStorage.instance.ref().child('norway.ovpn');
+  firebase_storage.Reference reference = firebase_storage.FirebaseStorage.instance.ref().child('norway.ovpn');
 
   Future downLoadServer () async {
-    String downLoadAddress = await _reference.getDownloadURL();
+    String downLoadAddress = await reference.getDownloadURL();
     final http.Response  downLoadData = await http.get(downLoadAddress);
     final Directory systemTempDir = Directory.systemTemp;
     final File tempFile = File('${systemTempDir.path}/norway.ovpn');
     if (tempFile.existsSync()){
       await tempFile.delete();
-    } await tempFile.create()
+    } await tempFile.create();
+
+    final firebase_storage.DownloadTask task = reference.writeToFile(tempFile);
+    final String path = await reference.fullPath;
+    final String name = await reference.name;
+    print('Success\DoawnLoaded: $name\nUrl: $downLoadAddress\nPath: $path ') ;
   }
 
   static Future<void> initPlatformState(String userName , String passWord) async {
-    var contennt = await rootBundle.loadString('vpn/sweden.ovpn');
+    final Directory systemTempDir = Directory.systemTemp;
+    var contennt = await rootBundle.loadString('${systemTempDir.path}/norway.ovpn');
     await FlutterOpenvpn.lunchVpn(
+      // p0386437  // MizEP29dBK
       contennt,
           (isProfileLoaded) {
         print('isProfileLoaded : $isProfileLoaded');
