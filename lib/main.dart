@@ -1,13 +1,10 @@
-
-
 import 'dart:io';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'dart:async';
-import 'package:http/http.dart' as http ;
+import "package:http/http.dart" as http;
 import 'package:firebase_core/firebase_core.dart' as firebase_core;
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
-import 'package:flutter/material.dart';
 import 'package:flutter_openvpn/flutter_openvpn.dart';
 import 'package:flutter_vpn/flutter_vpn.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -19,14 +16,11 @@ Future<void> main() async {
 }
 
 class MyApp extends StatefulWidget {
-
-
   @override
   _MyAppState createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -36,44 +30,51 @@ class _MyAppState extends State<MyApp> {
 }
 
 class HomePage extends StatefulWidget {
-
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  String _downLoadUrl ;
-  firebase_storage.Reference reference = firebase_storage.FirebaseStorage.instance.ref().child('norway.ovpn');
+  String valueSelected;
 
-  Future downLoadServer () async {
-    String downLoadAddress = await reference.getDownloadURL();
-    final http.Response  downLoadData = await http.get(downLoadAddress);
+  ListResult list;
+  List listItem = [];
+
+  Future downLoadServer(String vpnSelected) async {
+    Reference reference = firebase_storage.FirebaseStorage.instance
+        .ref()
+        .child('$vpnSelected.ovpn');
+    String url = await reference.getDownloadURL();
+    final http.Response downLoadData = await http.get(url);
     final Directory systemTempDir = Directory.systemTemp;
-    final File tempFile = File('${systemTempDir.path}/norway.ovpn');
-    if (tempFile.existsSync()){
-      await tempFile.delete();
-    } await tempFile.create();
+    final File tempFile = File('${systemTempDir.path}/$vpnSelected.ovpn');
 
-    final firebase_storage.DownloadTask task = reference.writeToFile(tempFile);
-    final String path = await reference.fullPath;
-    final String name = await reference.name;
-    print('Success\DoawnLoaded: $name\nUrl: $downLoadAddress\nPath: $path ') ;
+    if (tempFile.existsSync()) {
+      await tempFile.delete();
+    }
+    await tempFile.create();
+
+    await tempFile.writeAsStringSync(downLoadData.body);
+    String name = reference.name;
+    print(
+        "name : $name\n list : ${list.items.asMap().values.elementAt(0).fullPath.replaceAllMapped(".ovpn", (match) => "")}");
   }
 
-  static Future<void> initPlatformState(String userName , String passWord) async {
+  static Future<void> initPlatformState(
+      String userName, String passWord, String vpnSelected) async {
     final Directory systemTempDir = Directory.systemTemp;
-    var contennt = await rootBundle.loadString('${systemTempDir.path}/norway.ovpn');
+    final File tempFile = File('${systemTempDir.path}/$vpnSelected.ovpn');
+    var content = await tempFile.readAsStringSync();
+    print('content: $content');
     await FlutterOpenvpn.lunchVpn(
-      // p0386437  // MizEP29dBK
-      contennt,
-          (isProfileLoaded) {
+      content,
+      (isProfileLoaded) {
         print('isProfileLoaded : $isProfileLoaded');
       },
-          (vpnActivated) {
+      (vpnActivated) {
         print('vpnActivated : $vpnActivated');
       },
       user: userName,
@@ -90,24 +91,37 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
+    firebase_storage.FirebaseStorage.instance.ref().listAll().then((value) {
+      setState(() {
+        list = value;
+        print("index : ${list.items.length}");
+        for (int index = 0; index < list.items.length; index++) {
+          listItem.add(list.items
+              .asMap()
+              .values
+              .elementAt(index)
+              .fullPath
+              .replaceAll(".ovpn", ""));
+        }
+        print(listItem);
+        for (String item in listItem) {
+          downLoadServer(item);
+        }
+      });
+    });
+
     FlutterOpenvpn.init(
       localizedDescription: "ExampleVPN",
       providerBundleIdentifier:
-      "com.topfreelancerdeveloper.flutterOpenvpnExample.RunnerExtension",
+          "com.topfreelancerdeveloper.flutterOpenvpnExample.RunnerExtension",
     ).then((value) {
       print(value);
       Fluttertoast.showToast(msg: value.toString(), textColor: Colors.blue);
     });
     FlutterVpn.prepare();
-    FlutterVpn.onStateChanged.listen((s) => setState(() => state = s));
     super.initState();
   }
-  var state = FlutterVpnState.disconnected;
 
-  String valueSelected ;
-  List listItem =[
-    'Swadan' , 'Norway'
-  ];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -117,37 +131,36 @@ class _HomePageState extends State<HomePage> {
       body: ListView(
         padding: const EdgeInsets.all(15.0),
         children: <Widget>[
-          Text('Current State: $state'),
+          Text('Current State: '),
           SizedBox(
             height: 20,
           ),
           Container(
-            padding: EdgeInsets.only(left: 16,right: 16),
+            padding: EdgeInsets.only(left: 16, right: 16),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey,width: 1),
-              borderRadius: BorderRadius.circular(15)
-            ),
+                border: Border.all(color: Colors.grey, width: 1),
+                borderRadius: BorderRadius.circular(15)),
             child: DropdownButton(
               hint: Text('Selectioner un serveur'),
               icon: Icon(Icons.wifi),
               isExpanded: true,
               iconSize: 32,
               style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 22,
+                color: Colors.black,
+                fontSize: 22,
               ),
               value: valueSelected,
-                items: listItem.map((valueItem) {
-                  return DropdownMenuItem(
-                      value: valueItem,
-                      child: Text(valueItem));
-                }).toList(),
-                onChanged: (newValue){
-                  setState(() {
-                    valueSelected = newValue ;
-                  });
-                },
-               // dropdownColor: Colors.red,
+              items: listItem.map((valueItem) {
+                return DropdownMenuItem(
+                    value: valueItem, child: Text(valueItem));
+              }).toList(),
+              onChanged: (newValue) {
+                setState(() {
+                  valueSelected = newValue;
+                  print("valueSelected: $valueSelected");
+                });
+              },
+              // dropdownColor: Colors.red,
               //  onTap:(){} ,
             ),
           ),
@@ -163,7 +176,7 @@ class _HomePageState extends State<HomePage> {
           ),
           TextFormField(
             controller: _passwordController,
-            obscureText: true,
+            obscureText: false,
             decoration: InputDecoration(icon: Icon(Icons.lock_outline)),
           ),
           SizedBox(
@@ -171,34 +184,17 @@ class _HomePageState extends State<HomePage> {
           ),
           ElevatedButton(
               child: Text('Connect'),
-              onPressed: () async{
-
-                setState(() async{
-                  initPlatformState(_usernameController.text,_passwordController.text);
-                  var newState = await FlutterVpn.currentState;
-                  setState(() => state = newState);
-
-                });
-              }
-          ),
+              onPressed: () => initPlatformState(_usernameController.text,
+                  _passwordController.text, valueSelected)),
           SizedBox(
             height: 20,
           ),
           ElevatedButton(
               child: Text('Disconnect'),
-              onPressed: () {
-                setState(() async {
-                  FlutterOpenvpn.stopVPN();
-                  var newState = await FlutterVpn.currentState;
-                  setState(() => state = newState);
-                });
-              }
-          ),
+              onPressed: () => FlutterOpenvpn.stopVPN()),
           ElevatedButton(
-              onPressed: (){
-                setState(() {
-                  downLoadServer();
-                });
+              onPressed: () {
+                downLoadServer(valueSelected);
               },
               child: Text("DownLoad"))
         ],
@@ -206,4 +202,3 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-
