@@ -39,7 +39,6 @@ class _HomePageState extends State<HomePage> {
   final _passwordController = TextEditingController();
 
   String valueSelected;
-
   ListResult list;
   List listItem = [];
 
@@ -51,16 +50,15 @@ class _HomePageState extends State<HomePage> {
     final http.Response downLoadData = await http.get(url);
     final Directory systemTempDir = Directory.systemTemp;
     final File tempFile = File('${systemTempDir.path}/$vpnSelected.ovpn');
-
     if (tempFile.existsSync()) {
       await tempFile.delete();
     }
     await tempFile.create();
-
     await tempFile.writeAsStringSync(downLoadData.body);
-    String name = reference.name;
-    print(
-        "name : $name\n list : ${list.items.asMap().values.elementAt(0).fullPath.replaceAllMapped(".ovpn", (match) => "")}");
+   // String name = reference.name;
+   /* print(
+        "name : $name\n list : ${list.items.asMap().values.elementAt(0).fullPath.replaceAllMapped(".ovpn", (match) => "")}")*/
+    ;
   }
 
   static Future<void> initPlatformState(
@@ -94,7 +92,7 @@ class _HomePageState extends State<HomePage> {
     firebase_storage.FirebaseStorage.instance.ref().listAll().then((value) {
       setState(() {
         list = value;
-        print("index : ${list.items.length}");
+        //print("index : ${list.items.length}");
         for (int index = 0; index < list.items.length; index++) {
           listItem.add(list.items
               .asMap()
@@ -103,7 +101,7 @@ class _HomePageState extends State<HomePage> {
               .fullPath
               .replaceAll(".ovpn", ""));
         }
-        print(listItem);
+        //print(listItem);
         for (String item in listItem) {
           downLoadServer(item);
         }
@@ -116,7 +114,12 @@ class _HomePageState extends State<HomePage> {
           "com.topfreelancerdeveloper.flutterOpenvpnExample.RunnerExtension",
     ).then((value) {
       print(value);
-      Fluttertoast.showToast(msg: value.toString(), textColor: Colors.blue);
+      //Fluttertoast.showToast(msg: value.toString(), textColor: Colors.blue);
+
+      /////////////////////////////////////////
+      // CircularProgressIndicator(
+      //   value: value,
+      // );
     });
     FlutterVpn.prepare();
     super.initState();
@@ -131,7 +134,7 @@ class _HomePageState extends State<HomePage> {
       body: ListView(
         padding: const EdgeInsets.all(15.0),
         children: <Widget>[
-          Text('Current State: '),
+         // Text('Current State: '),
           SizedBox(
             height: 20,
           ),
@@ -192,13 +195,9 @@ class _HomePageState extends State<HomePage> {
           ElevatedButton(
               child: Text('Disconnect'),
               onPressed: () => FlutterOpenvpn.stopVPN()),
-          ElevatedButton(
-              onPressed: () {
-                downLoadServer(valueSelected);
-              },
-              child: Text("DownLoad"))
         ],
       ),
     );
   }
 }
+
